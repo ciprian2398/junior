@@ -1,7 +1,10 @@
+import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.awt.image.BufferedImage;
+import java.io.IOException;
+import java.net.URL;
 
 public class SpecialJPanel extends JPanel {
 
@@ -29,7 +32,6 @@ public class SpecialJPanel extends JPanel {
             e.printStackTrace();
         }
         rectangle = new ScreenSize().getRectangle();
-        bufferedImage = robot.createScreenCapture(rectangle);
         imageDimension = new Dimension(rectangle.width, rectangle.height);
 
         MouseMotionListener ms = new MouseAdapter() {
@@ -63,10 +65,10 @@ public class SpecialJPanel extends JPanel {
 
     private void calcImageDimension(int d) {
         d *= -1;
-        if ((zoomLevel > minZoom+scale && d < 0 ) || (zoomLevel+scale <= maxZoom && d > 0) ){
+        if ((zoomLevel > minZoom + scale && d < 0) || (zoomLevel + scale <= maxZoom && d > 0)) {
             zoomLevel += (d * scale);
-            imageDimension.width = (rectangle.width * zoomLevel)/100;
-            imageDimension.height = (rectangle.height * zoomLevel)/100;
+            imageDimension.width = (rectangle.width * zoomLevel) / 100;
+            imageDimension.height = (rectangle.height * zoomLevel) / 100;
         }
     }
 
@@ -76,22 +78,33 @@ public class SpecialJPanel extends JPanel {
         oldPoint = point;
     }
 
+    public void getFrame(){
+        try {
+            URL url = new URL("http://127.0.0.1:8080/video");
+            bufferedImage = ImageIO.read(url);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+    }
+
+
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
-        if (bufferedImage != null) {
-            Graphics2D g2d = (Graphics2D) g.create();
-            bufferedImage = robot.createScreenCapture(rectangle);
 
-            BufferedImage resizedImage = new BufferedImage(imageDimension.width, imageDimension.height, 1);
-            Graphics2D res = resizedImage.createGraphics();
-            res.drawImage(bufferedImage, 0, 0, imageDimension.width, imageDimension.height, this);
+        Graphics2D g2d = (Graphics2D) g.create();
+        getFrame();
 
-            bufferedImage = resizedImage;
-            g2d.drawImage(bufferedImage, imagePosition.x, imagePosition.y, this);
-            g2d.dispose();
-            g.dispose();
-            repaint();
-        }
+        BufferedImage resizedImage = new BufferedImage(imageDimension.width, imageDimension.height, 1);
+        Graphics2D res = resizedImage.createGraphics();
+        res.drawImage(bufferedImage, 0, 0, imageDimension.width, imageDimension.height, this);
+
+        bufferedImage = resizedImage;
+        g2d.drawImage(bufferedImage, imagePosition.x, imagePosition.y, this);
+        g2d.dispose();
+        g.dispose();
+        repaint();
+
     }
 }
